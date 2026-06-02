@@ -250,6 +250,26 @@ class TestNumbers:
                 blocking=True,
             )
 
+    async def test_set_max_current_raises_on_invalid_value(
+        self, hass, config_entry, mock_client
+    ):
+        mock_client.set_max_current.side_effect = ValueError(
+            "must be between 6 and 32 A"
+        )
+        await _setup(hass, config_entry, mock_client)
+
+        with pytest.raises(
+            HomeAssistantError,
+            match="Invalid max current value 11 on CP1: must be between 6 and 32 A",
+        ) as exc_info:
+            await hass.services.async_call(
+                NUMBER_DOMAIN, "set_value",
+                {"entity_id": "number.charging_point_1_max_current", "value": 11},
+                blocking=True,
+            )
+
+        assert isinstance(exc_info.value.__cause__, ValueError)
+
     async def test_dynamic_max_current_initial_value(self, hass, config_entry, mock_client):
         await _setup(hass, config_entry, mock_client)
         state = hass.states.get("number.charx_dynamic_max_current_group")

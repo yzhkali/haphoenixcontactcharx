@@ -49,8 +49,12 @@ class CharxMaxCurrentNumber(CharxChargingPointEntity, NumberEntity):
         try:
             await self.coordinator.client.set_max_current(self._charging_point, current)
         except ValueError as err:
-            _LOGGER.error("Invalid max current value %d: %s", current, err)
-            return
+            message = (
+                f"Invalid max current value {current} on "
+                f"CP{self._charging_point}: {err}"
+            )
+            _LOGGER.error(message)
+            raise HomeAssistantError(message) from err
         except (CharxConnectionError, CharxModbusError) as err:
             message = (
                 f"Failed to set max current on CP{self._charging_point}: {err}"
